@@ -32,10 +32,10 @@ struct GSListRaw {
 /// Mirror of libsigrok `struct sr_channel { int index; int type; gboolean enabled; char *name; … }`.
 #[repr(C)]
 struct SrChannelRaw {
-    index:   c_int,
-    type_:   c_int,
+    index: c_int,
+    type_: c_int,
     enabled: c_int, // gboolean = gint = c_int
-    name:    *const c_char,
+    name: *const c_char,
 }
 
 // GLib functions not in libsigrok-sys but present in the linked libglib2.0.
@@ -633,11 +633,7 @@ fn analyze_capture(
         return;
     }
 
-    let duration_us = if samplerate > 0 {
-        (total as u64 * 1_000_000) / samplerate
-    } else {
-        0
-    };
+    let duration_us = (total as u64 * 1_000_000).checked_div(samplerate).unwrap_or(0);
 
     // When the user requested specific channels, restrict per-channel reporting
     // to those bits. Otherwise scan all 8.

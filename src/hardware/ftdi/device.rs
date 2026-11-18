@@ -1,5 +1,5 @@
 use crate::core::{
-    Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
+    Plugin, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };
 use crate::plugin_meta;
 use anyhow::Result;
@@ -77,9 +77,7 @@ impl Plugin for DevicePlugin {
                 let mut dev = match FtdiDevice::from_device_info(dev_info, Interface::A) {
                     Ok(d) => d,
                     Err(e) => {
-                        access_errors.push(format!(
-                            "{vid:04x}:{pid_found:04x}: {e}"
-                        ));
+                        access_errors.push(format!("{vid:04x}:{pid_found:04x}: {e}"));
                         continue;
                     }
                 };
@@ -151,9 +149,21 @@ impl Plugin for DevicePlugin {
                 entry.vid,
                 entry.pid,
                 entry.chip,
-                if entry.manufacturer.is_empty() { "n/a" } else { &entry.manufacturer },
-                if entry.product.is_empty() { "n/a" } else { &entry.product },
-                if entry.serial.is_empty() { "n/a" } else { &entry.serial },
+                if entry.manufacturer.is_empty() {
+                    "n/a"
+                } else {
+                    &entry.manufacturer
+                },
+                if entry.product.is_empty() {
+                    "n/a"
+                } else {
+                    &entry.product
+                },
+                if entry.serial.is_empty() {
+                    "n/a"
+                } else {
+                    &entry.serial
+                },
                 entry.mpsse,
             );
 
@@ -162,7 +172,11 @@ impl Plugin for DevicePlugin {
                 entry.vid,
                 entry.pid,
                 entry.chip,
-                if entry.serial.is_empty() { "n/a" } else { &entry.serial },
+                if entry.serial.is_empty() {
+                    "n/a"
+                } else {
+                    &entry.serial
+                },
             );
 
             let title = if entry.product.is_empty() {
@@ -172,8 +186,7 @@ impl Plugin for DevicePlugin {
             };
 
             result.add(
-                PluginFinding::new(Severity::Info, title, description)
-                    .with_evidence(evidence),
+                PluginFinding::new(Severity::Info, title, description).with_evidence(evidence),
             );
         }
 
@@ -205,7 +218,6 @@ fn chip_label(ct: ChipType) -> &'static str {
         ChipType::Ft4232H => "FT4232H",
         ChipType::Ft232H => "FT232H",
         ChipType::Ft230X => "FT230X / FT231X / FT234XD",
-        _ => "Unknown",
     }
 }
 

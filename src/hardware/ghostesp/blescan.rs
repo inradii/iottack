@@ -99,7 +99,6 @@ impl Default for BleScanPlugin {
     }
 }
 
-///
 impl Plugin for BleScanPlugin {
     fn meta(&self) -> PluginMeta {
         plugin_meta!(
@@ -254,27 +253,26 @@ impl Plugin for BleScanPlugin {
             if stop.load(Ordering::Relaxed) {
                 break;
             }
-            if deadline.map_or(false, |d| Instant::now() >= d) {
+            if deadline.is_some_and(|d| Instant::now() >= d) {
                 break;
             }
 
-            if let Ok(bytes) = session.read_bytes(512) {
-                if !bytes.is_empty() {
-                    line_buf.push_str(&strip_ansi(&String::from_utf8_lossy(&bytes)));
+            if let Ok(bytes) = session.read_bytes(512)
+                && !bytes.is_empty()
+            {
+                line_buf.push_str(&strip_ansi(&String::from_utf8_lossy(&bytes)));
 
-                    // Flush complete lines to stdout and accumulate for findings.
-                    while let Some(pos) = line_buf.find('\n') {
-                        let line = line_buf[..pos].trim().to_string();
-                        line_buf.drain(..=pos);
-                        if !line.is_empty()
-                            && !line.contains(PROMPT)
-                            && line != cmd
-                            && !line.starts_with("scan_active=")
-                        {
-                            println!("{line}");
-                            collected.push_str(&line);
-                            collected.push('\n');
-                        }
+                while let Some(pos) = line_buf.find('\n') {
+                    let line = line_buf[..pos].trim().to_string();
+                    line_buf.drain(..=pos);
+                    if !line.is_empty()
+                        && !line.contains(PROMPT)
+                        && line != cmd
+                        && !line.starts_with("scan_active=")
+                    {
+                        println!("{line}");
+                        collected.push_str(&line);
+                        collected.push('\n');
                     }
                 }
             }

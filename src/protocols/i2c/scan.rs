@@ -1,13 +1,13 @@
 use crate::core::{
     CliArg, Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };
-use crate::plugin_meta;
-use crate::hardware::ftdi::{FtdiConfig, FtdiPlugin};
 use crate::hardware::ftdi::config::MpsseMode;
+use crate::hardware::ftdi::{FtdiConfig, FtdiPlugin};
 use crate::hardware::mcp2221::i2c::Mcp2221I2c;
+use crate::plugin_meta;
 use anyhow::Result;
 use ftdi_nusb::{
-    mpsse::{i2c::I2cBus, MpsseContext},
+    mpsse::{MpsseContext, i2c::I2cBus},
     types::Interface,
 };
 
@@ -191,7 +191,15 @@ impl I2cScanPlugin {
             }
         }
 
-        report_findings(&mut result, &found, &format!("FTDI {:04x}:{:04x} channel {channel}", self.config.vid, actual_pid), self.config.clock_hz);
+        report_findings(
+            &mut result,
+            &found,
+            &format!(
+                "FTDI {:04x}:{:04x} channel {channel}",
+                self.config.vid, actual_pid
+            ),
+            self.config.clock_hz,
+        );
         result.finish(PluginStatus::Pass);
         Ok(result)
     }

@@ -2,7 +2,7 @@ use crate::core::{
     CliArg, Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };
 use crate::plugin_meta;
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use ftdi_nusb::{
     blocking,
     types::{DataBits, FlowControl, Interface, Parity, StopBits},
@@ -253,10 +253,14 @@ impl Plugin for OneWireScanPlugin {
             };
 
             let security_note = match family {
-                0x01 => "\n  Security note: DS2401 provides identity without challenge-response; \
-                          the serial number is cloneable.",
-                0x14 | 0x23 | 0x2D | 0x1D => "\n  Security note: memory device - may contain \
-                          credentials, keys, or configuration data.",
+                0x01 => {
+                    "\n  Security note: DS2401 provides identity without challenge-response; \
+                          the serial number is cloneable."
+                }
+                0x14 | 0x23 | 0x2D | 0x1D => {
+                    "\n  Security note: memory device - may contain \
+                          credentials, keys, or configuration data."
+                }
                 _ => "",
             };
 
@@ -320,8 +324,7 @@ impl OneWireBus {
             .map_err(|e| anyhow!("set_flow_control: {e}"))?;
         dev.set_baudrate(115200)
             .map_err(|e| anyhow!("set_baudrate 115200: {e}"))?;
-        dev.flush_all()
-            .map_err(|e| anyhow!("flush_all: {e}"))?;
+        dev.flush_all().map_err(|e| anyhow!("flush_all: {e}"))?;
         Ok(Self { dev })
     }
 
@@ -394,8 +397,8 @@ impl OneWireBus {
 
     fn write_byte(&mut self, byte: u8) -> Result<()> {
         let mut tx = [0u8; 8];
-        for i in 0..8 {
-            tx[i] = if (byte >> i) & 1 == 1 { 0xFF } else { 0x00 };
+        for (i, slot) in tx.iter_mut().enumerate() {
+            *slot = if (byte >> i) & 1 == 1 { 0xFF } else { 0x00 };
         }
         self.dev
             .write_all(&tx)
@@ -404,14 +407,11 @@ impl OneWireBus {
         let mut echo = [0u8; 8];
         let mut collected = 0usize;
         for _ in 0..20 {
-            match self.dev.read_data(&mut echo[collected..]) {
-                Ok(n) => {
-                    collected += n;
-                    if collected >= 8 {
-                        return Ok(());
-                    }
+            if let Ok(n) = self.dev.read_data(&mut echo[collected..]) {
+                collected += n;
+                if collected >= 8 {
+                    return Ok(());
                 }
-                Err(_) => {}
             }
             if collected < 8 {
                 thread::sleep(Duration::from_millis(2));
@@ -429,14 +429,11 @@ impl OneWireBus {
         let mut echo = [0u8; 8];
         let mut collected = 0usize;
         for _ in 0..20 {
-            match self.dev.read_data(&mut echo[collected..]) {
-                Ok(n) => {
-                    collected += n;
-                    if collected >= 8 {
-                        break;
-                    }
+            if let Ok(n) = self.dev.read_data(&mut echo[collected..]) {
+                collected += n;
+                if collected >= 8 {
+                    break;
                 }
-                Err(_) => {}
             }
             if collected < 8 {
                 thread::sleep(Duration::from_millis(2));
@@ -479,10 +476,8 @@ fn search_rom(ow: &mut OneWireBus) -> Result<Vec<[u8; 8]>> {
             let direction = if !id_bit && !cmp_id_bit {
                 let dir = if i < last_discrepancy {
                     (rom[(i / 8) as usize] >> (i % 8)) & 1 == 1
-                } else if i == last_discrepancy {
-                    true
                 } else {
-                    false
+                    i == last_discrepancy
                 };
                 // Track the last bit where we chose 0; that's where the next
                 // search pass must branch right to enumerate the next device.
@@ -587,16 +582,17 @@ fn family_name(code: u8) -> &'static str {
 /// Open an FTDI device with the given vendor ID, optional product ID, and interface. Returns a blocking FTDI device instance.
 fn open_ftdi(vid: u16, pid: Option<u16>, iface: Interface) -> Result<blocking::FtdiDevice> {
     match pid {
-        Some(p) => blocking::FtdiDevice::open_with_interface(vid, p, iface)
-            .map_err(|e| {
-                anyhow!(
-                    "failed to open FTDI {:04x}:{:04x}: {e}. \
+        Some(p) => blocking::FtdiDevice::open_with_interface(vid, p, iface).map_err(|e| {
+            anyhow!(
+                "failed to open FTDI {:04x}:{:04x}: {e}. \
                      Check udev rules: \
                      echo 'SUBSYSTEM==\"usb\", ATTR{{idVendor}}==\"{:04x}\", MODE=\"0666\"' \
                      | sudo tee /etc/udev/rules.d/99-ftdi.rules && sudo udevadm control --reload",
-                    vid, p, vid
-                )
-            }),
+                vid,
+                p,
+                vid
+            )
+        }),
         None => {
             let mut wrong_iface_pid: Option<u16> = None;
             for &p in AUTO_PIDS {
@@ -614,7 +610,9 @@ fn open_ftdi(vid: u16, pid: Option<u16>, iface: Interface) -> Result<blocking::F
                 Err(anyhow!(
                     "FTDI {:04x}:{:04x} found but channel {:?} does not exist on this device. \
                      FT232H is single-channel; use --channel A or omit --channel.",
-                    vid, p, iface
+                    vid,
+                    p,
+                    iface
                 ))
             } else {
                 Err(anyhow!(

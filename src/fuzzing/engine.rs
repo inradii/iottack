@@ -166,7 +166,7 @@ impl FuzzEngine {
                 let matched: Vec<String> = self
                     .patterns
                     .iter()
-                    .map(|s| *s)
+                    .copied()
                     .chain(self.extra_patterns.iter().map(String::as_str))
                     .filter(|p| text.contains(p))
                     .map(|s| s.to_string())

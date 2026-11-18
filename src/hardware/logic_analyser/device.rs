@@ -25,13 +25,13 @@ struct GSListRaw {
 /// Mirror of libsigrok `struct sr_channel { int index; int type; gboolean enabled; char *name; … }`.
 #[repr(C)]
 struct SrChannelRaw {
-    index:   c_int,
-    type_:   c_int,
+    index: c_int,
+    type_: c_int,
     enabled: c_int, // gboolean = gint = c_int
-    name:    *const c_char,
+    name: *const c_char,
 }
 
-/// Device plugin for listing all sigrok-supported logic analyzers connected to the host.
+// Device plugin for listing all sigrok-supported logic analyzers connected to the host.
 unsafe extern "C" {
     fn g_slist_free(list: *mut GSList);
 }
@@ -229,7 +229,7 @@ impl Plugin for DevicePlugin {
         result.add(PluginFinding::new(
             Severity::Info,
             format!("{} logic analyzer(s) detected", devices.len()),
-            format!("Use 'iottack logic-analyser capture --driver <DRIVER>' to start a capture."),
+            "Use 'iottack logic-analyser capture --driver <DRIVER>' to start a capture.".to_string(),
         ));
 
         for dev in &devices {

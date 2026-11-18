@@ -232,7 +232,7 @@ impl Plugin for BlueFiPlugin {
         // Discard any pending startup output from the device.
         let _ = session.drain();
 
-        /// Step 1: HCI Reset. Confirm the device is in HCI mode
+        // Step 1: HCI Reset. Confirm the device is in HCI mode
         match hci_transact(&mut session, HCI_RESET, timeout) {
             None => {
                 result.add(PluginFinding::new(
@@ -308,10 +308,10 @@ impl Plugin for BlueFiPlugin {
             if known_ocfs.contains(&ocf) {
                 continue; // already probed in step 2
             }
-            if let Some(s) = hci_transact(&mut session, &hci_vendor_cmd(ocf), timeout) {
-                if s != HCI_STATUS_UNKNOWN_CMD {
-                    extra.push((ocf, s));
-                }
+            if let Some(s) = hci_transact(&mut session, &hci_vendor_cmd(ocf), timeout)
+                && s != HCI_STATUS_UNKNOWN_CMD
+            {
+                extra.push((ocf, s));
             }
         }
 

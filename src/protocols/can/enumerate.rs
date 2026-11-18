@@ -10,7 +10,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::io;
 use std::time::{Duration, Instant};
 
-use super::common::{format_id, hex_bytes, IFACE_HELP};
+use super::common::{IFACE_HELP, format_id, hex_bytes};
 
 pub struct CanEnumerate {
     iface: String,
@@ -236,10 +236,10 @@ impl Plugin for CanEnumerate {
             // Send all RTR probes first, then collect in bulk
             for node in 1u16..=127 {
                 let id = 0x700 + node;
-                if let Some(sid) = StandardId::new(id) {
-                    if let Some(rtr) = CanRemoteFrame::new_remote(sid, 0) {
-                        let _ = socket.write_frame(&CanFrame::Remote(rtr));
-                    }
+                if let Some(sid) = StandardId::new(id)
+                    && let Some(rtr) = CanRemoteFrame::new_remote(sid, 0)
+                {
+                    let _ = socket.write_frame(&CanFrame::Remote(rtr));
                 }
             }
 
@@ -294,10 +294,9 @@ impl Plugin for CanEnumerate {
                 // Send SDO upload initiate (read 0x1000:00 = Device Type)
                 for &node in all_canopen.keys() {
                     let sdo_id = 0x600 + node as u32;
-                    if let Some(req) = make_data_frame(
-                        sdo_id,
-                        &[0x40, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00],
-                    ) {
+                    if let Some(req) =
+                        make_data_frame(sdo_id, &[0x40, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00])
+                    {
                         let _ = socket.write_frame(&CanFrame::Data(req));
                     }
                 }
@@ -332,14 +331,19 @@ impl Plugin for CanEnumerate {
                             Severity::High,
                         )
                     } else {
-                        ("device type unknown (SDO timeout or not supported)".into(), Severity::Medium)
+                        (
+                            "device type unknown (SDO timeout or not supported)".into(),
+                            Severity::Medium,
+                        )
                     };
 
                     result.add(
                         PluginFinding::new(
                             sev,
                             format!(
-                                "CANopen node {} at {nid}: {}", node, canopen_state_name(state)
+                                "CANopen node {} at {nid}: {}",
+                                node,
+                                canopen_state_name(state)
                             ),
                             format!(
                                 "Node ID  : {node}\n\
@@ -385,8 +389,8 @@ fn collect_frames(socket: &CanSocket, window: Duration) -> BTreeMap<u32, Vec<u8>
             }
             Ok(_) => {}
             Err(e)
-                if e.kind() == io::ErrorKind::WouldBlock
-                    || e.kind() == io::ErrorKind::TimedOut => {}
+                if e.kind() == io::ErrorKind::WouldBlock || e.kind() == io::ErrorKind::TimedOut => {
+            }
             Err(_) => break,
         }
     }
@@ -441,7 +445,9 @@ fn decode_obd_supported_pids(data: &[u8]) -> Vec<u8> {
         data.get(5).copied().unwrap_or(0),
         data.get(6).copied().unwrap_or(0),
     ]);
-    (1u8..=32).filter(|&pid| mask & (1 << (32 - pid)) != 0).collect()
+    (1u8..=32)
+        .filter(|&pid| mask & (1 << (32 - pid)) != 0)
+        .collect()
 }
 
 inventory::submit! {

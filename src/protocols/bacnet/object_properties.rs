@@ -4,8 +4,8 @@ use crate::core::{
 use crate::plugin_meta;
 use anyhow::Result;
 use bacnet_rs::client::{BacnetClient, BacnetTarget};
-use bacnet_rs::object::property_identifier::PropertyIdentifier;
 use bacnet_rs::object::ObjectIdentifier;
+use bacnet_rs::object::property_identifier::PropertyIdentifier;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -14,49 +14,54 @@ use super::BACNET_DEFAULT_PORT;
 /// Standard properties tried on every object type.
 fn common_props() -> Vec<(&'static str, PropertyIdentifier)> {
     vec![
-        ("Object Identifier",   PropertyIdentifier::ObjectIdentifier),
-        ("Object Name",         PropertyIdentifier::ObjectName),
-        ("Object Type",         PropertyIdentifier::ObjectType),
-        ("Description",         PropertyIdentifier::Description),
-        ("Present Value",       PropertyIdentifier::PresentValue),
-        ("Status Flags",        PropertyIdentifier::StatusFlags),
-        ("Event State",         PropertyIdentifier::EventState),
-        ("Out of Service",      PropertyIdentifier::OutOfService),
-        ("Reliability",         PropertyIdentifier::Reliability),
-        ("Units",               PropertyIdentifier::Units),
-        ("Min Pres Value",      PropertyIdentifier::MinPresValue),
-        ("Max Pres Value",      PropertyIdentifier::MaxPresValue),
-        ("Resolution",          PropertyIdentifier::Resolution),
-        ("COV Increment",       PropertyIdentifier::CovIncrement),
-        ("High Limit",          PropertyIdentifier::HighLimit),
-        ("Low Limit",           PropertyIdentifier::LowLimit),
-        ("Deadband",            PropertyIdentifier::Deadband),
-        ("Limit Enable",        PropertyIdentifier::LimitEnable),
-        ("Event Enable",        PropertyIdentifier::EventEnable),
-        ("Acked Transitions",   PropertyIdentifier::AckedTransitions),
-        ("Notify Type",         PropertyIdentifier::NotifyType),
-        ("Number of States",    PropertyIdentifier::NumberOfStates),
-        ("State Text",          PropertyIdentifier::StateText),
-        ("Active Text",         PropertyIdentifier::ActiveText),
-        ("Inactive Text",       PropertyIdentifier::InactiveText),
-        ("Polarity",            PropertyIdentifier::Polarity),
-        ("Priority Array",      PropertyIdentifier::PriorityArray),
-        ("Relinquish Default",  PropertyIdentifier::RelinquishDefault),
-        ("Profile Name",        PropertyIdentifier::ProfileName),
-        ("Property List",       PropertyIdentifier::PropertyList),
+        ("Object Identifier", PropertyIdentifier::ObjectIdentifier),
+        ("Object Name", PropertyIdentifier::ObjectName),
+        ("Object Type", PropertyIdentifier::ObjectType),
+        ("Description", PropertyIdentifier::Description),
+        ("Present Value", PropertyIdentifier::PresentValue),
+        ("Status Flags", PropertyIdentifier::StatusFlags),
+        ("Event State", PropertyIdentifier::EventState),
+        ("Out of Service", PropertyIdentifier::OutOfService),
+        ("Reliability", PropertyIdentifier::Reliability),
+        ("Units", PropertyIdentifier::Units),
+        ("Min Pres Value", PropertyIdentifier::MinPresValue),
+        ("Max Pres Value", PropertyIdentifier::MaxPresValue),
+        ("Resolution", PropertyIdentifier::Resolution),
+        ("COV Increment", PropertyIdentifier::CovIncrement),
+        ("High Limit", PropertyIdentifier::HighLimit),
+        ("Low Limit", PropertyIdentifier::LowLimit),
+        ("Deadband", PropertyIdentifier::Deadband),
+        ("Limit Enable", PropertyIdentifier::LimitEnable),
+        ("Event Enable", PropertyIdentifier::EventEnable),
+        ("Acked Transitions", PropertyIdentifier::AckedTransitions),
+        ("Notify Type", PropertyIdentifier::NotifyType),
+        ("Number of States", PropertyIdentifier::NumberOfStates),
+        ("State Text", PropertyIdentifier::StateText),
+        ("Active Text", PropertyIdentifier::ActiveText),
+        ("Inactive Text", PropertyIdentifier::InactiveText),
+        ("Polarity", PropertyIdentifier::Polarity),
+        ("Priority Array", PropertyIdentifier::PriorityArray),
+        ("Relinquish Default", PropertyIdentifier::RelinquishDefault),
+        ("Profile Name", PropertyIdentifier::ProfileName),
+        ("Property List", PropertyIdentifier::PropertyList),
     ]
 }
 
 /// Parse "analogInput:1", "Analog-Input:1", "ai:1" into ObjectIdentifier.
 fn parse_object(s: &str) -> anyhow::Result<ObjectIdentifier> {
-    let (type_str, inst_str) = s.rsplit_once(':')
+    let (type_str, inst_str) = s
+        .rsplit_once(':')
         .ok_or_else(|| anyhow::anyhow!("expected TYPE:INSTANCE format, e.g. analogInput:1"))?;
-    let instance = inst_str.trim().parse::<u32>()
+    let instance = inst_str
+        .trim()
+        .parse::<u32>()
         .map_err(|e| anyhow::anyhow!("invalid instance number: {e}"))?;
-    let obj_type = super::parse_object_type(type_str.trim())
-        .ok_or_else(|| anyhow::anyhow!(
-            "unknown object type '{}'; try analogInput, binaryOutput, device, etc.", type_str
-        ))?;
+    let obj_type = super::parse_object_type(type_str.trim()).ok_or_else(|| {
+        anyhow::anyhow!(
+            "unknown object type '{}'; try analogInput, binaryOutput, device, etc.",
+            type_str
+        )
+    })?;
     Ok(ObjectIdentifier::new(obj_type, instance))
 }
 
@@ -82,7 +87,9 @@ impl ObjectPropertiesPlugin {
 }
 
 impl Default for ObjectPropertiesPlugin {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Plugin for ObjectPropertiesPlugin {
@@ -172,14 +179,11 @@ impl Plugin for ObjectPropertiesPlugin {
         let mut readable = 0usize;
 
         for (label, prop) in common_props() {
-            match client.read_property(target.clone(), obj_id, prop) {
-                Ok(values) => {
-                    let display = super::format_value(values)
-                        .unwrap_or_else(|| "<binary/complex>".into());
-                    lines.push(format!("{label}: {display}"));
-                    readable += 1;
-                }
-                Err(_) => {}
+            if let Ok(values) = client.read_property(target.clone(), obj_id, prop) {
+                let display =
+                    super::format_value(values).unwrap_or_else(|| "<binary/complex>".into());
+                lines.push(format!("{label}: {display}"));
+                readable += 1;
             }
         }
 

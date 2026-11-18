@@ -132,14 +132,12 @@ pub struct SniffLine {
 fn word_after<'a>(line: &'a str, key: &str) -> Option<&'a str> {
     let start = line.find(key)? + key.len();
     let rest = line[start..].trim_start();
-    let end = rest
-        .find(|c: char| c.is_whitespace())
-        .unwrap_or(rest.len());
+    let end = rest.find(|c: char| c.is_whitespace()).unwrap_or(rest.len());
     Some(&rest[..end])
 }
 
 fn decode_hex(s: &str) -> Option<Vec<u8>> {
-    if s.len() % 2 != 0 {
+    if !s.len().is_multiple_of(2) {
         return None;
     }
     (0..s.len())

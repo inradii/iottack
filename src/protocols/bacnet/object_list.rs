@@ -4,9 +4,9 @@ use crate::core::{
 use crate::plugin_meta;
 use anyhow::Result;
 use bacnet_rs::client::{BacnetClient, BacnetTarget};
+use bacnet_rs::object::ObjectIdentifier;
 use bacnet_rs::object::object_type::ObjectType;
 use bacnet_rs::object::property_identifier::PropertyIdentifier;
-use bacnet_rs::object::ObjectIdentifier;
 use bacnet_rs::property::PropertyValue;
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -38,7 +38,9 @@ impl ObjectListPlugin {
 
 /// Default implementation for ObjectListPlugin
 impl Default for ObjectListPlugin {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Plugin implementation for ObjectListPlugin
@@ -150,7 +152,11 @@ impl Plugin for ObjectListPlugin {
         let mut objects: Vec<ObjectIdentifier> = list_values
             .into_iter()
             .filter_map(|v| {
-                if let PropertyValue::ObjectIdentifier(oid) = v { Some(oid) } else { None }
+                if let PropertyValue::ObjectIdentifier(oid) = v {
+                    Some(oid)
+                } else {
+                    None
+                }
             })
             .collect();
 

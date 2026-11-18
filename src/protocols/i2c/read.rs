@@ -1,12 +1,12 @@
 use crate::core::{
     CliArg, Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };
-use crate::plugin_meta;
-use crate::hardware::ftdi::{FtdiConfig, FtdiPlugin};
 use crate::hardware::ftdi::config::MpsseMode;
-use anyhow::{anyhow, Result};
+use crate::hardware::ftdi::{FtdiConfig, FtdiPlugin};
+use crate::plugin_meta;
+use anyhow::{Result, anyhow};
 use ftdi_nusb::{
-    mpsse::{i2c::I2cBus, MpsseContext},
+    mpsse::{MpsseContext, i2c::I2cBus},
     types::Interface,
 };
 
@@ -129,11 +129,9 @@ impl Plugin for I2cReadPlugin {
         self.register = if reg_str.is_empty() {
             None
         } else {
-            Some(
-                parse_hex_byte(&reg_str).map_err(|_| {
-                    anyhow!("invalid register '{reg_str}', expected hex like 00 or 0x00")
-                })?,
-            )
+            Some(parse_hex_byte(&reg_str).map_err(|_| {
+                anyhow!("invalid register '{reg_str}', expected hex like 00 or 0x00")
+            })?)
         };
 
         self.length = config.parse_or("length", 1usize);
@@ -199,28 +197,33 @@ impl I2cReadPlugin {
         let i2c = I2cBus::new(&mut session).await?;
 
         let bytes = match self.register {
-            Some(reg) => {
-                i2c.write_read(&mut session, self.address, &[reg], self.length)
-                    .await
-                    .map_err(|e| {
-                        anyhow!(
-                            "write-read failed for 0x{:02x} register 0x{:02x}: {e}",
-                            self.address, reg
-                        )
-                    })?
-            }
-            None => {
-                i2c.read(&mut session, self.address, self.length)
-                    .await
-                    .map_err(|e| anyhow!("read failed for 0x{:02x}: {e}", self.address))?
-            }
+            Some(reg) => i2c
+                .write_read(&mut session, self.address, &[reg], self.length)
+                .await
+                .map_err(|e| {
+                    anyhow!(
+                        "write-read failed for 0x{:02x} register 0x{:02x}: {e}",
+                        self.address,
+                        reg
+                    )
+                })?,
+            None => i2c
+                .read(&mut session, self.address, self.length)
+                .await
+                .map_err(|e| anyhow!("read failed for 0x{:02x}: {e}", self.address))?,
         };
 
         let hex_str: Vec<String> = bytes.iter().map(|b| format!("{b:02x}")).collect();
         let dec_str: Vec<String> = bytes.iter().map(|b| b.to_string()).collect();
         let ascii_str: String = bytes
             .iter()
-            .map(|&b| if b.is_ascii_graphic() || b == b' ' { b as char } else { '.' })
+            .map(|&b| {
+                if b.is_ascii_graphic() || b == b' ' {
+                    b as char
+                } else {
+                    '.'
+                }
+            })
             .collect();
 
         let reg_label = match self.register {

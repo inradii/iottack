@@ -23,13 +23,20 @@ pub struct BacnetScanner {
 /// BacnetScanner implementation
 impl BacnetScanner {
     pub fn new() -> Self {
-        Self { host: None, port: BACNET_DEFAULT_PORT, timeout_ms: 3_000, device_id: None }
+        Self {
+            host: None,
+            port: BACNET_DEFAULT_PORT,
+            timeout_ms: 3_000,
+            device_id: None,
+        }
     }
 }
 
 /// Default implementation for BacnetScanner
 impl Default for BacnetScanner {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Plugin implementation for BacnetScanner
@@ -103,7 +110,9 @@ impl Plugin for BacnetScanner {
             .map_err(|e| anyhow::anyhow!("failed to create BACnet client: {e}"))?;
 
         let devices = if let Some(id) = self.device_id {
-            let host = self.host.as_deref()
+            let host = self
+                .host
+                .as_deref()
                 .ok_or_else(|| anyhow::anyhow!("--host is required when --device-id is set"))?;
             let addr: SocketAddr = format!("{}:{}", host, self.port)
                 .parse()
@@ -113,10 +122,12 @@ impl Plugin for BacnetScanner {
             let addr: SocketAddr = format!("{}:{}", host, self.port)
                 .parse()
                 .map_err(|e| anyhow::anyhow!("invalid host/port: {e}"))?;
-            client.who_is_to(addr, None, None)
+            client
+                .who_is_to(addr, None, None)
                 .map_err(|e| anyhow::anyhow!("who-is failed: {e}"))?
         } else {
-            client.who_is(None, None)
+            client
+                .who_is(None, None)
                 .map_err(|e| anyhow::anyhow!("who-is broadcast failed: {e}"))?
         };
 
@@ -147,21 +158,24 @@ impl Plugin for BacnetScanner {
             ];
 
             let props: &[(PropertyIdentifier, &str)] = &[
-                (PropertyIdentifier::ObjectName,                 "Object Name"),
-                (PropertyIdentifier::ModelName,                  "Model Name"),
-                (PropertyIdentifier::FirmwareRevision,           "Firmware Revision"),
-                (PropertyIdentifier::ApplicationSoftwareVersion, "App Software Version"),
-                (PropertyIdentifier::Description,                "Description"),
-                (PropertyIdentifier::Location,                   "Location"),
+                (PropertyIdentifier::ObjectName, "Object Name"),
+                (PropertyIdentifier::ModelName, "Model Name"),
+                (PropertyIdentifier::FirmwareRevision, "Firmware Revision"),
+                (
+                    PropertyIdentifier::ApplicationSoftwareVersion,
+                    "App Software Version",
+                ),
+                (PropertyIdentifier::Description, "Description"),
+                (PropertyIdentifier::Location, "Location"),
             ];
 
             let mut readable: Vec<&str> = Vec::new();
             for (prop, prop_name) in props {
-                if let Ok(values) = client.read_property(target.clone(), oid, prop.clone()) {
-                    if let Some(val) = super::format_value(values) {
-                        evidence.push(format!("{prop_name}: {val}"));
-                        readable.push(prop_name);
-                    }
+                if let Ok(values) = client.read_property(target.clone(), oid, *prop)
+                    && let Some(val) = super::format_value(values)
+                {
+                    evidence.push(format!("{prop_name}: {val}"));
+                    readable.push(prop_name);
                 }
             }
 
@@ -171,7 +185,7 @@ impl Plugin for BacnetScanner {
                     format!("BACnet/IP device at {peer} (instance {})", device.device_id),
                     "Device responded to Who-Is/I-Am without authentication. \
                      ReadProperty queries were rejected or timed out."
-                    .to_string(),
+                        .to_string(),
                 )
             } else {
                 (
@@ -192,8 +206,7 @@ impl Plugin for BacnetScanner {
             };
 
             result.add(
-                PluginFinding::new(severity, title, description)
-                    .with_evidence(evidence.join("\n")),
+                PluginFinding::new(severity, title, description).with_evidence(evidence.join("\n")),
             );
         }
 

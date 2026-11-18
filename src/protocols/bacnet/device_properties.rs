@@ -4,9 +4,9 @@ use crate::core::{
 use crate::plugin_meta;
 use anyhow::Result;
 use bacnet_rs::client::{BacnetClient, BacnetTarget};
+use bacnet_rs::object::ObjectIdentifier;
 use bacnet_rs::object::object_type::ObjectType;
 use bacnet_rs::object::property_identifier::PropertyIdentifier;
-use bacnet_rs::object::ObjectIdentifier;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -16,38 +16,62 @@ use super::BACNET_DEFAULT_PORT;
 fn all_device_props() -> Vec<(&'static str, PropertyIdentifier)> {
     vec![
         // Required properties
-        ("Object Identifier",               PropertyIdentifier::ObjectIdentifier),
-        ("Object Name",                     PropertyIdentifier::ObjectName),
-        ("Object Type",                     PropertyIdentifier::ObjectType),
-        ("System Status",                   PropertyIdentifier::SystemStatus),
-        ("Vendor Name",                     PropertyIdentifier::VendorName),
-        ("Vendor Identifier",               PropertyIdentifier::VendorIdentifier),
-        ("Model Name",                      PropertyIdentifier::ModelName),
-        ("Firmware Revision",               PropertyIdentifier::FirmwareRevision),
-        ("Application Software Version",    PropertyIdentifier::ApplicationSoftwareVersion),
-        ("Protocol Version",                PropertyIdentifier::ProtocolVersion),
-        ("Protocol Revision",               PropertyIdentifier::ProtocolRevision),
-        ("Protocol Services Supported",     PropertyIdentifier::ProtocolServicesSupported),
-        ("Protocol Object Types Supported", PropertyIdentifier::ProtocolObjectTypesSupported),
-        ("Object List",                     PropertyIdentifier::ObjectList),
-        ("Max APDU Length Accepted",        PropertyIdentifier::MaxApduLengthAccepted),
-        ("Segmentation Supported",          PropertyIdentifier::SegmentationSupported),
-        ("APDU Timeout (ms)",               PropertyIdentifier::ApduTimeout),
-        ("Number of APDU Retries",          PropertyIdentifier::NumberOfApduRetries),
-        ("Database Revision",               PropertyIdentifier::DatabaseRevision),
+        ("Object Identifier", PropertyIdentifier::ObjectIdentifier),
+        ("Object Name", PropertyIdentifier::ObjectName),
+        ("Object Type", PropertyIdentifier::ObjectType),
+        ("System Status", PropertyIdentifier::SystemStatus),
+        ("Vendor Name", PropertyIdentifier::VendorName),
+        ("Vendor Identifier", PropertyIdentifier::VendorIdentifier),
+        ("Model Name", PropertyIdentifier::ModelName),
+        ("Firmware Revision", PropertyIdentifier::FirmwareRevision),
+        (
+            "Application Software Version",
+            PropertyIdentifier::ApplicationSoftwareVersion,
+        ),
+        ("Protocol Version", PropertyIdentifier::ProtocolVersion),
+        ("Protocol Revision", PropertyIdentifier::ProtocolRevision),
+        (
+            "Protocol Services Supported",
+            PropertyIdentifier::ProtocolServicesSupported,
+        ),
+        (
+            "Protocol Object Types Supported",
+            PropertyIdentifier::ProtocolObjectTypesSupported,
+        ),
+        ("Object List", PropertyIdentifier::ObjectList),
+        (
+            "Max APDU Length Accepted",
+            PropertyIdentifier::MaxApduLengthAccepted,
+        ),
+        (
+            "Segmentation Supported",
+            PropertyIdentifier::SegmentationSupported,
+        ),
+        ("APDU Timeout (ms)", PropertyIdentifier::ApduTimeout),
+        (
+            "Number of APDU Retries",
+            PropertyIdentifier::NumberOfApduRetries,
+        ),
+        ("Database Revision", PropertyIdentifier::DatabaseRevision),
         // Optional but common
-        ("Description",                     PropertyIdentifier::Description),
-        ("Location",                        PropertyIdentifier::Location),
-        ("Local Date",                      PropertyIdentifier::LocalDate),
-        ("Local Time",                      PropertyIdentifier::LocalTime),
-        ("UTC Offset (min)",                PropertyIdentifier::UtcOffset),
-        ("Daylight Savings Status",         PropertyIdentifier::DaylightSavingsStatus),
-        ("Profile Name",                    PropertyIdentifier::ProfileName),
-        ("Last Restart Reason",             PropertyIdentifier::LastRestartReason),
-        ("Backup and Restore State",        PropertyIdentifier::BackupAndRestoreState),
-        ("Out of Service",                  PropertyIdentifier::OutOfService),
-        ("Event State",                     PropertyIdentifier::EventState),
-        ("Status Flags",                    PropertyIdentifier::StatusFlags),
+        ("Description", PropertyIdentifier::Description),
+        ("Location", PropertyIdentifier::Location),
+        ("Local Date", PropertyIdentifier::LocalDate),
+        ("Local Time", PropertyIdentifier::LocalTime),
+        ("UTC Offset (min)", PropertyIdentifier::UtcOffset),
+        (
+            "Daylight Savings Status",
+            PropertyIdentifier::DaylightSavingsStatus,
+        ),
+        ("Profile Name", PropertyIdentifier::ProfileName),
+        ("Last Restart Reason", PropertyIdentifier::LastRestartReason),
+        (
+            "Backup and Restore State",
+            PropertyIdentifier::BackupAndRestoreState,
+        ),
+        ("Out of Service", PropertyIdentifier::OutOfService),
+        ("Event State", PropertyIdentifier::EventState),
+        ("Status Flags", PropertyIdentifier::StatusFlags),
     ]
 }
 
@@ -62,13 +86,20 @@ pub struct DevicePropertiesPlugin {
 /// Create a new instance of the DevicePropertiesPlugin with default settings.
 impl DevicePropertiesPlugin {
     pub fn new() -> Self {
-        Self { host: String::new(), port: BACNET_DEFAULT_PORT, timeout_ms: 5_000, device_id: None }
+        Self {
+            host: String::new(),
+            port: BACNET_DEFAULT_PORT,
+            timeout_ms: 5_000,
+            device_id: None,
+        }
     }
 }
 
 /// Implement the Default trait for the DevicePropertiesPlugin, allowing it to be instantiated with default settings.
 impl Default for DevicePropertiesPlugin {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Implement the Plugin trait for the DevicePropertiesPlugin, enabling it to be used as a plugin within the framework.
@@ -154,8 +185,8 @@ impl Plugin for DevicePropertiesPlugin {
         for (label, prop) in all_device_props() {
             match client.read_property(target.clone(), oid, prop) {
                 Ok(values) => {
-                    let display = super::format_value(values)
-                        .unwrap_or_else(|| "<binary/complex>".into());
+                    let display =
+                        super::format_value(values).unwrap_or_else(|| "<binary/complex>".into());
                     lines.push(format!("{label}: {display}"));
                     readable += 1;
                 }
@@ -169,8 +200,7 @@ impl Plugin for DevicePropertiesPlugin {
             result.add(PluginFinding::new(
                 Severity::Info,
                 format!("No Device properties readable at {addr}"),
-                "Device did not return any readable properties for the Device object."
-                    .to_string(),
+                "Device did not return any readable properties for the Device object.".to_string(),
             ));
             result.finish(PluginStatus::Fail);
         } else {

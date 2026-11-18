@@ -1,4 +1,4 @@
-use super::{DEFAULT_TIMEOUT_MS, TcpConfig, TcpPlugin, TcpSession};
+use super::{TcpConfig, TcpPlugin, TcpSession};
 use crate::core::{
     CliArg, Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };

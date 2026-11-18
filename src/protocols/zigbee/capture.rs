@@ -2,7 +2,7 @@ use crate::core::{
     CliArg, Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };
 use crate::hardware::nrf52840::zigbee::{
-    drain, find_nrf52840_ports, parse_sniffer_line, read_line, SniffLine, write_cmd,
+    SniffLine, drain, find_nrf52840_ports, parse_sniffer_line, read_line, write_cmd,
 };
 use crate::plugin_meta;
 use anyhow::Result;
@@ -99,13 +99,11 @@ fn format_table(rows: &[FrameRow]) -> String {
     let wn = col_w(rows.iter().map(|r| r.num.to_string().len()), "#");
     let wt = col_w(rows.iter().map(|r| r.type_str.len()), "Type");
     let ws = col_w(
-        rows.iter()
-            .map(|r| r.src.as_deref().unwrap_or("-").len()),
+        rows.iter().map(|r| r.src.as_deref().unwrap_or("-").len()),
         "Src",
     );
     let wd = col_w(
-        rows.iter()
-            .map(|r| r.dst.as_deref().unwrap_or("-").len()),
+        rows.iter().map(|r| r.dst.as_deref().unwrap_or("-").len()),
         "Dst",
     );
     let wp = col_w(
@@ -115,9 +113,20 @@ fn format_table(rows: &[FrameRow]) -> String {
 
     let hdr = format!(
         " {hnum:>wn$}  {htype:<wt$}  {hch:<2}  {hsrc:<ws$}  {hdst:<wd$}  {hpan:<wp$}  {hb:<3}  {hrssi:>4}  {hlqi:<3}  Enc",
-        hnum = "#", htype = "Type", hch = "Ch", hsrc = "Src",
-        hdst = "Dst", hpan = "PAN", hb = "B", hrssi = "RSSI", hlqi = "LQI",
-        wn = wn, wt = wt, ws = ws, wd = wd, wp = wp,
+        hnum = "#",
+        htype = "Type",
+        hch = "Ch",
+        hsrc = "Src",
+        hdst = "Dst",
+        hpan = "PAN",
+        hb = "B",
+        hrssi = "RSSI",
+        hlqi = "LQI",
+        wn = wn,
+        wt = wt,
+        ws = ws,
+        wd = wd,
+        wp = wp,
     );
     let sep = "-".repeat(hdr.len());
     let mut out = format!("{hdr}\n{sep}");
@@ -223,15 +232,12 @@ fn parse_frame(pkt: &SniffLine, channel: u8, frame_num: u32) -> FrameRow {
         let addr = if src_mode == 2 {
             if frame.len() >= offset + 2 {
                 let a = u16::from_le_bytes([frame[offset], frame[offset + 1]]);
-                offset += 2;
                 Some(format!("0x{a:04x}"))
             } else {
                 None
             }
         } else if frame.len() >= offset + 8 {
-            let s = format_ext_addr(&frame[offset..offset + 8]);
-            offset += 8;
-            Some(s)
+            Some(format_ext_addr(&frame[offset..offset + 8]))
         } else {
             None
         };
@@ -239,8 +245,6 @@ fn parse_frame(pkt: &SniffLine, channel: u8, frame_num: u32) -> FrameRow {
     } else {
         (None, None)
     };
-
-    drop(offset);
 
     FrameRow {
         num: frame_num,
@@ -653,9 +657,7 @@ impl Plugin for CapturePlugin {
             };
             result.add(PluginFinding::new(
                 Severity::Info,
-                format!(
-                    "{total_frames} frame(s) captured - active ch: {active}{errors_note}"
-                ),
+                format!("{total_frames} frame(s) captured - active ch: {active}{errors_note}"),
                 format_table(&all_rows),
             ));
         } else {

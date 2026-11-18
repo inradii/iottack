@@ -4,7 +4,6 @@ use crate::core::{
 use crate::plugin_meta;
 use anyhow::Result;
 
-///
 pub struct DevicePlugin {
     address: String,
     adapter_name: String,
@@ -173,19 +172,19 @@ impl DevicePlugin {
 
         let was_connected = device.is_connected().await.unwrap_or(false);
 
-        if !was_connected {
-            if let Err(e) = device.connect().await {
-                result.add(PluginFinding::new(
-                    Severity::Info,
-                    format!("Cannot connect to {addr}"),
-                    format!(
-                        "{e}\n\nThe device may be out of range, powered off or require pairing. \
-                         Run 'iottack ble scan' first to confirm it is advertising."
-                    ),
-                ));
-                result.finish(PluginStatus::Pass);
-                return Ok(result);
-            }
+        if !was_connected
+            && let Err(e) = device.connect().await
+        {
+            result.add(PluginFinding::new(
+                Severity::Info,
+                format!("Cannot connect to {addr}"),
+                format!(
+                    "{e}\n\nThe device may be out of range, powered off or require pairing. \
+                     Run 'iottack ble scan' first to confirm it is advertising."
+                ),
+            ));
+            result.finish(PluginStatus::Pass);
+            return Ok(result);
         }
 
         let name = device.name().await.ok().flatten().unwrap_or_default();

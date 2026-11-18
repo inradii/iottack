@@ -230,21 +230,18 @@ impl Plugin for DevicePlugin {
         session.write_bytes(b"\n")?;
         session.flush()?;
 
-        match read_until_prompt(&mut session, self.timeout_ms) {
-            Err(e) => {
-                result.add(PluginFinding::new(
-                    Severity::Info,
-                    "GhostESP prompt not found",
-                    format!(
-                        "{e}. Ensure the device is running GhostESP firmware and \
-                         connected at {baud} baud.",
-                        baud = self.baud_rate
-                    ),
-                ));
-                result.finish(PluginStatus::Pass);
-                return Ok(result);
-            }
-            Ok(_) => {}
+        if let Err(e) = read_until_prompt(&mut session, self.timeout_ms) {
+            result.add(PluginFinding::new(
+                Severity::Info,
+                "GhostESP prompt not found",
+                format!(
+                    "{e}. Ensure the device is running GhostESP firmware and \
+                     connected at {baud} baud.",
+                    baud = self.baud_rate
+                ),
+            ));
+            result.finish(PluginStatus::Pass);
+            return Ok(result);
         }
 
         // GhostESP command: chipinfo

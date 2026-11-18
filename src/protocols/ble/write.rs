@@ -660,7 +660,7 @@ impl WritePlugin {
         if self.hex {
             let stripped = self.value.replace([' ', ':', '-'], "");
             tracing::debug!(raw = self.value, stripped = stripped, "parsing hex payload");
-            if stripped.len() % 2 != 0 {
+            if !stripped.len().is_multiple_of(2) {
                 anyhow::bail!("HEX string has an odd number of nibbles: '{}'", self.value);
             }
             let bytes: anyhow::Result<Vec<u8>> = (0..stripped.len())

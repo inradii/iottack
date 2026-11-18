@@ -65,10 +65,10 @@ fn read_for_duration(session: &mut UartSession, duration_ms: u64) -> String {
     let mut buf = String::new();
     let deadline = Instant::now() + Duration::from_millis(duration_ms);
     while Instant::now() < deadline {
-        if let Ok(bytes) = session.read_bytes(512) {
-            if !bytes.is_empty() {
-                buf.push_str(&String::from_utf8_lossy(&bytes));
-            }
+        if let Ok(bytes) = session.read_bytes(512)
+            && !bytes.is_empty()
+        {
+            buf.push_str(&String::from_utf8_lossy(&bytes));
         }
     }
     strip_ansi(&buf)
