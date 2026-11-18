@@ -4,9 +4,9 @@ use crate::core::{
 use crate::plugin_meta;
 use anyhow::Result;
 use bacnet_rs::client::{BacnetClient, BacnetTarget};
+use bacnet_rs::object::ObjectIdentifier;
 use bacnet_rs::object::object_type::ObjectType;
 use bacnet_rs::object::property_identifier::PropertyIdentifier;
-use bacnet_rs::object::ObjectIdentifier;
 use std::net::SocketAddr;
 use std::time::Duration;
 
@@ -15,24 +15,30 @@ use super::BACNET_DEFAULT_PORT;
 /// Properties read from Network Port objects (ASHRAE 135 clause 12.56).
 fn network_port_props() -> Vec<(&'static str, PropertyIdentifier)> {
     vec![
-        ("Object Name",             PropertyIdentifier::ObjectName),
-        ("Description",             PropertyIdentifier::Description),
-        ("Out of Service",          PropertyIdentifier::OutOfService),
-        ("Network Type",            PropertyIdentifier::NetworkType),
-        ("Protocol Level",          PropertyIdentifier::ProtocolLevel),
-        ("Network Number",          PropertyIdentifier::NetworkNumber),
-        ("Network Number Quality",  PropertyIdentifier::NetworkNumberQuality),
-        ("Changes Pending",         PropertyIdentifier::ChangesPending),
-        ("MAC Address",             PropertyIdentifier::MacAddress),
-        ("IP Address",              PropertyIdentifier::IpAddress),
-        ("IP Subnet Mask",          PropertyIdentifier::IpSubnetMask),
-        ("IP Default Gateway",      PropertyIdentifier::IpDefaultGateway),
-        ("IP DNS Server",           PropertyIdentifier::IpDnsServer),
-        ("BACnet IP UDP Port",      PropertyIdentifier::BacnetIpUdpPort),
-        ("BACnet IP NAT Traversal", PropertyIdentifier::BacnetIpNatTraversal),
-        ("IP DHCP Enable",          PropertyIdentifier::IpDhcpEnable),
-        ("IP DHCP Server",          PropertyIdentifier::IpDhcpServer),
-        ("Link Speed",              PropertyIdentifier::LinkSpeed),
+        ("Object Name", PropertyIdentifier::ObjectName),
+        ("Description", PropertyIdentifier::Description),
+        ("Out of Service", PropertyIdentifier::OutOfService),
+        ("Network Type", PropertyIdentifier::NetworkType),
+        ("Protocol Level", PropertyIdentifier::ProtocolLevel),
+        ("Network Number", PropertyIdentifier::NetworkNumber),
+        (
+            "Network Number Quality",
+            PropertyIdentifier::NetworkNumberQuality,
+        ),
+        ("Changes Pending", PropertyIdentifier::ChangesPending),
+        ("MAC Address", PropertyIdentifier::MacAddress),
+        ("IP Address", PropertyIdentifier::IpAddress),
+        ("IP Subnet Mask", PropertyIdentifier::IpSubnetMask),
+        ("IP Default Gateway", PropertyIdentifier::IpDefaultGateway),
+        ("IP DNS Server", PropertyIdentifier::IpDnsServer),
+        ("BACnet IP UDP Port", PropertyIdentifier::BacnetIpUdpPort),
+        (
+            "BACnet IP NAT Traversal",
+            PropertyIdentifier::BacnetIpNatTraversal,
+        ),
+        ("IP DHCP Enable", PropertyIdentifier::IpDhcpEnable),
+        ("IP DHCP Server", PropertyIdentifier::IpDhcpServer),
+        ("Link Speed", PropertyIdentifier::LinkSpeed),
     ]
 }
 
@@ -47,13 +53,20 @@ pub struct NetworkInfoPlugin {
 /// Constructor for the NetworkInfoPlugin.
 impl NetworkInfoPlugin {
     pub fn new() -> Self {
-        Self { host: String::new(), port: BACNET_DEFAULT_PORT, timeout_ms: 5_000, device_id: None }
+        Self {
+            host: String::new(),
+            port: BACNET_DEFAULT_PORT,
+            timeout_ms: 5_000,
+            device_id: None,
+        }
     }
 }
 
 /// Default implementation for the NetworkInfoPlugin.
 impl Default for NetworkInfoPlugin {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Implementation of the Plugin trait for the NetworkInfoPlugin.
@@ -136,7 +149,10 @@ impl Plugin for NetworkInfoPlugin {
         let mut addr_lines = vec![
             format!("UDP address:   {}", device.address),
             format!("Device ID:     {}", device.device_id),
-            format!("Vendor:        {} (ID {})", device.vendor_name, device.vendor_id),
+            format!(
+                "Vendor:        {} (ID {})",
+                device.vendor_name, device.vendor_id
+            ),
             format!("Max APDU:      {}", device.max_apdu),
             format!("Segmentation:  {:?}", device.segmentation),
         ];
@@ -168,11 +184,11 @@ impl Plugin for NetworkInfoPlugin {
             let mut readable = 0usize;
 
             for (label, prop) in network_port_props() {
-                if let Ok(values) = client.read_property(target.clone(), *np_id, prop) {
-                    if let Some(val) = super::format_value(values) {
-                        np_lines.push(format!("{label}: {val}"));
-                        readable += 1;
-                    }
+                if let Ok(values) = client.read_property(target.clone(), *np_id, prop)
+                    && let Some(val) = super::format_value(values)
+                {
+                    np_lines.push(format!("{label}: {val}"));
+                    readable += 1;
                 }
             }
 
@@ -197,15 +213,16 @@ impl Plugin for NetworkInfoPlugin {
         }
 
         // BACnet router discovery
-        let routers = client
-            .who_is_router_to(addr, None)
-            .unwrap_or_default();
+        let routers = client.who_is_router_to(addr, None).unwrap_or_default();
 
         if !routers.is_empty() {
-            let router_lines: Vec<String> = routers.iter().map(|r| {
-                let nets: Vec<String> = r.networks.iter().map(|n| n.to_string()).collect();
-                format!("{} → networks [{}]", r.address, nets.join(", "))
-            }).collect();
+            let router_lines: Vec<String> = routers
+                .iter()
+                .map(|r| {
+                    let nets: Vec<String> = r.networks.iter().map(|n| n.to_string()).collect();
+                    format!("{} → networks [{}]", r.address, nets.join(", "))
+                })
+                .collect();
 
             result.add(
                 PluginFinding::new(

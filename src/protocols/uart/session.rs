@@ -68,17 +68,12 @@ impl UartSession {
     pub fn read_line(&mut self) -> Result<String> {
         let mut line = Vec::new();
         let mut byte = [0u8; 1];
-        loop {
-            match self.port.read(&mut byte) {
-                Ok(1) => {
-                    if byte[0] == b'\n' {
-                        break;
-                    }
-                    if byte[0] != b'\r' {
-                        line.push(byte[0]);
-                    }
-                }
-                _ => break,
+        while let Ok(1) = self.port.read(&mut byte) {
+            if byte[0] == b'\n' {
+                break;
+            }
+            if byte[0] != b'\r' {
+                line.push(byte[0]);
             }
         }
         Ok(String::from_utf8_lossy(&line).into_owned())

@@ -4,9 +4,9 @@ use crate::core::{
 use crate::plugin_meta;
 use anyhow::Result;
 use bacnet_rs::client::{BacnetClient, BacnetTarget};
+use bacnet_rs::object::ObjectIdentifier;
 use bacnet_rs::object::object_type::ObjectType;
 use bacnet_rs::object::property_identifier::PropertyIdentifier;
-use bacnet_rs::object::ObjectIdentifier;
 use bacnet_rs::property::PropertyValue;
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -15,16 +15,16 @@ use super::BACNET_DEFAULT_PORT;
 
 // Service name table (ASHRAE 135, services-supported bit positions)
 const SERVICES: &[(usize, &str)] = &[
-    (0,  "acknowledge-alarm"),
-    (1,  "confirmed-cov-notification"),
-    (2,  "confirmed-event-notification"),
-    (3,  "get-alarm-summary"),
-    (4,  "get-enrollment-summary"),
-    (5,  "subscribe-cov"),
-    (6,  "atomic-read-file"),
-    (7,  "atomic-write-file"),
-    (8,  "add-list-element"),
-    (9,  "remove-list-element"),
+    (0, "acknowledge-alarm"),
+    (1, "confirmed-cov-notification"),
+    (2, "confirmed-event-notification"),
+    (3, "get-alarm-summary"),
+    (4, "get-enrollment-summary"),
+    (5, "subscribe-cov"),
+    (6, "atomic-read-file"),
+    (7, "atomic-write-file"),
+    (8, "add-list-element"),
+    (9, "remove-list-element"),
     (10, "create-object"),
     (11, "delete-object"),
     (12, "read-property"),
@@ -60,26 +60,44 @@ const SERVICES: &[(usize, &str)] = &[
 
 // Services that represent significant unauthenticated attack surface.
 const DANGEROUS_SERVICES: &[(usize, &str)] = &[
-    (10, "create-object                - can create new BACnet objects on the device"),
-    (11, "delete-object                - can delete BACnet objects from the device"),
-    (15, "write-property               - can modify device properties and control outputs"),
-    (16, "write-property-multiple      - can modify multiple properties in a single request"),
-    (17, "device-communication-control - can disable device communications (DoS)"),
-    (20, "reinitialize-device          - can restart or factory-reset the device"),
+    (
+        10,
+        "create-object                - can create new BACnet objects on the device",
+    ),
+    (
+        11,
+        "delete-object                - can delete BACnet objects from the device",
+    ),
+    (
+        15,
+        "write-property               - can modify device properties and control outputs",
+    ),
+    (
+        16,
+        "write-property-multiple      - can modify multiple properties in a single request",
+    ),
+    (
+        17,
+        "device-communication-control - can disable device communications (DoS)",
+    ),
+    (
+        20,
+        "reinitialize-device          - can restart or factory-reset the device",
+    ),
 ];
 
 // Object type name table (object-types-supported bit positions)
 const OBJECT_TYPES: &[(usize, &str)] = &[
-    (0,  "Analog-Input"),
-    (1,  "Analog-Output"),
-    (2,  "Analog-Value"),
-    (3,  "Binary-Input"),
-    (4,  "Binary-Output"),
-    (5,  "Binary-Value"),
-    (6,  "Calendar"),
-    (7,  "Command"),
-    (8,  "Device"),
-    (9,  "Event-Enrollment"),
+    (0, "Analog-Input"),
+    (1, "Analog-Output"),
+    (2, "Analog-Value"),
+    (3, "Binary-Input"),
+    (4, "Binary-Output"),
+    (5, "Binary-Value"),
+    (6, "Calendar"),
+    (7, "Command"),
+    (8, "Device"),
+    (9, "Event-Enrollment"),
     (10, "File"),
     (11, "Group"),
     (12, "Loop"),
@@ -119,11 +137,17 @@ pub struct ServicesPlugin {
 /// ServicesPlugin implementation
 impl ServicesPlugin {
     pub fn new() -> Self {
-        Self { host: String::new(), port: BACNET_DEFAULT_PORT, timeout_ms: 5_000, device_id: None }
+        Self {
+            host: String::new(),
+            port: BACNET_DEFAULT_PORT,
+            timeout_ms: 5_000,
+            device_id: None,
+        }
     }
 
     fn resolve_bits<'a>(bits: &[bool], table: &'a [(usize, &str)]) -> Vec<&'a str> {
-        table.iter()
+        table
+            .iter()
             .filter(|(bit, _)| bits.get(*bit).copied().unwrap_or(false))
             .map(|(_, name)| *name)
             .collect()
@@ -139,7 +163,9 @@ impl ServicesPlugin {
 
 /// Default implementation for ServicesPlugin
 impl Default for ServicesPlugin {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Plugin implementation for ServicesPlugin
@@ -223,7 +249,11 @@ impl Plugin for ServicesPlugin {
 
         // Services supported.
         if let Some(svc_bits) = client
-            .read_property(target.clone(), oid, PropertyIdentifier::ProtocolServicesSupported)
+            .read_property(
+                target.clone(),
+                oid,
+                PropertyIdentifier::ProtocolServicesSupported,
+            )
             .ok()
             .and_then(Self::extract_bitstring)
         {
@@ -233,7 +263,10 @@ impl Plugin for ServicesPlugin {
             result.add(
                 PluginFinding::new(
                     Severity::Medium,
-                    format!("{} BACnet services readable unauthenticated at {addr}", enabled.len()),
+                    format!(
+                        "{} BACnet services readable unauthenticated at {addr}",
+                        enabled.len()
+                    ),
                     format!(
                         "The services-supported property was readable without credentials, \
                          revealing the complete service capability set ({} services).",
@@ -243,7 +276,8 @@ impl Plugin for ServicesPlugin {
                 .with_evidence(enabled.join("\n")),
             );
 
-            let dangerous: Vec<&str> = DANGEROUS_SERVICES.iter()
+            let dangerous: Vec<&str> = DANGEROUS_SERVICES
+                .iter()
                 .filter(|(bit, _)| svc_bits.get(*bit).copied().unwrap_or(false))
                 .map(|(_, desc)| *desc)
                 .collect();
@@ -271,7 +305,11 @@ impl Plugin for ServicesPlugin {
 
         // Object types supported.
         if let Some(type_bits) = client
-            .read_property(target.clone(), oid, PropertyIdentifier::ProtocolObjectTypesSupported)
+            .read_property(
+                target.clone(),
+                oid,
+                PropertyIdentifier::ProtocolObjectTypesSupported,
+            )
             .ok()
             .and_then(Self::extract_bitstring)
         {

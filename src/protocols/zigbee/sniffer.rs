@@ -185,12 +185,7 @@ fn capture_channel(
 }
 
 /// Add findings for a specific channel based on the captured statistics.
-fn add_channel_findings(
-    result: &mut PluginResult,
-    port: &str,
-    channel: u8,
-    stats: &ChannelStats,
-) {
+fn add_channel_findings(result: &mut PluginResult, port: &str, channel: u8, stats: &ChannelStats) {
     if stats.total == 0 {
         return;
     }

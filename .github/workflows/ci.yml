@@ -44,5 +44,10 @@ jobs:
           export BINDGEN_EXTRA_CLANG_ARGS="$(pkg-config --cflags glib-2.0 libsigrok libsigrokdecode)"
           cargo build
 
+      - name: Clippy
+        run: |
+          export BINDGEN_EXTRA_CLANG_ARGS="$(pkg-config --cflags glib-2.0 libsigrok libsigrokdecode)"
+          cargo clippy -- -D warnings
+
       - name: Run tests
         run: cargo test

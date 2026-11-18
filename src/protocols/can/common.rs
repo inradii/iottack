@@ -47,8 +47,7 @@ pub fn hex_bytes(data: &[u8]) -> String {
         .join(" ")
 }
 
-pub const IFACE_HELP: &str =
-    "Bring up the interface:\n  \
+pub const IFACE_HELP: &str = "Bring up the interface:\n  \
      ip link set <iface> up type can bitrate 500000\n\
      For virtual CAN:\n  \
      modprobe vcan && ip link add dev vcan0 type vcan && ip link set vcan0 up";

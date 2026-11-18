@@ -1,11 +1,11 @@
-use super::{DEFAULT_TIMEOUT_MS, TcpConfig, TcpPlugin, TcpSession};
+use super::{TcpConfig, TcpPlugin, TcpSession};
 use crate::core::{
     CliArg, Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };
 use crate::fuzzing::{FuzzEngine, FuzzTransport};
 use crate::plugin_meta;
 use anyhow::Result;
-use std::io::{ErrorKind, Read};
+use std::io::ErrorKind;
 use std::net::{TcpStream, ToSocketAddrs};
 use std::time::Duration;
 

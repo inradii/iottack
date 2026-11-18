@@ -12,8 +12,8 @@ pub mod services;
 pub(crate) const BACNET_DEFAULT_PORT: u16 = 47808; // 0xBAC0
 
 use bacnet_rs::client::{BacnetClient, DeviceInfo};
-use bacnet_rs::object::object_type::ObjectType;
 use bacnet_rs::object::Segmentation;
+use bacnet_rs::object::object_type::ObjectType;
 use bacnet_rs::property::PropertyValue;
 use std::net::SocketAddr;
 
@@ -49,10 +49,12 @@ pub(crate) fn connect(
         .map_err(|e| anyhow::anyhow!("device not found at {addr}: {e}"))?
         .into_iter()
         .next()
-        .ok_or_else(|| anyhow::anyhow!(
-            "device not found at {addr}: no I-Am response \
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "device not found at {addr}: no I-Am response \
              (try --device-id if the client and device share a host)"
-        ))
+            )
+        })
 }
 
 pub(crate) fn object_type_name(obj_type: &ObjectType) -> &'static str {
@@ -114,42 +116,42 @@ pub(crate) fn is_data_point(obj_type: &ObjectType) -> bool {
 
 pub(crate) fn parse_object_type(s: &str) -> Option<ObjectType> {
     match s.to_lowercase().replace(['-', '_', ' '], "").as_str() {
-        "analoginput"      | "ai"  => Some(ObjectType::AnalogInput),
-        "analogoutput"     | "ao"  => Some(ObjectType::AnalogOutput),
-        "analogvalue"      | "av"  => Some(ObjectType::AnalogValue),
-        "binaryinput"      | "bi"  => Some(ObjectType::BinaryInput),
-        "binaryoutput"     | "bo"  => Some(ObjectType::BinaryOutput),
-        "binaryvalue"      | "bv"  => Some(ObjectType::BinaryValue),
-        "calendar"                 => Some(ObjectType::Calendar),
-        "command"                  => Some(ObjectType::Command),
-        "device"           | "dev" => Some(ObjectType::Device),
-        "eventenrollment"  | "ee"  => Some(ObjectType::EventEnrollment),
-        "file"                     => Some(ObjectType::File),
-        "group"                    => Some(ObjectType::Group),
-        "loop"                     => Some(ObjectType::Loop),
-        "multistateinput"  | "msi" => Some(ObjectType::MultiStateInput),
+        "analoginput" | "ai" => Some(ObjectType::AnalogInput),
+        "analogoutput" | "ao" => Some(ObjectType::AnalogOutput),
+        "analogvalue" | "av" => Some(ObjectType::AnalogValue),
+        "binaryinput" | "bi" => Some(ObjectType::BinaryInput),
+        "binaryoutput" | "bo" => Some(ObjectType::BinaryOutput),
+        "binaryvalue" | "bv" => Some(ObjectType::BinaryValue),
+        "calendar" => Some(ObjectType::Calendar),
+        "command" => Some(ObjectType::Command),
+        "device" | "dev" => Some(ObjectType::Device),
+        "eventenrollment" | "ee" => Some(ObjectType::EventEnrollment),
+        "file" => Some(ObjectType::File),
+        "group" => Some(ObjectType::Group),
+        "loop" => Some(ObjectType::Loop),
+        "multistateinput" | "msi" => Some(ObjectType::MultiStateInput),
         "multistateoutput" | "mso" => Some(ObjectType::MultiStateOutput),
-        "multistatevalue"  | "msv" => Some(ObjectType::MultiStateValue),
-        "notificationclass"| "nc"  => Some(ObjectType::NotificationClass),
-        "program"                  => Some(ObjectType::Program),
-        "schedule"                 => Some(ObjectType::Schedule),
-        "averaging"                => Some(ObjectType::Averaging),
-        "trendlog"         | "tl"  => Some(ObjectType::TrendLog),
-        "lifesafetypoint"  | "lsp" => Some(ObjectType::LifeSafetyPoint),
-        "lifesafetyzone"   | "lsz" => Some(ObjectType::LifeSafetyZone),
-        "accumulator"              => Some(ObjectType::Accumulator),
-        "pulseconverter"   | "pc"  => Some(ObjectType::PulseConverter),
-        "eventlog"         | "el"  => Some(ObjectType::EventLog),
+        "multistatevalue" | "msv" => Some(ObjectType::MultiStateValue),
+        "notificationclass" | "nc" => Some(ObjectType::NotificationClass),
+        "program" => Some(ObjectType::Program),
+        "schedule" => Some(ObjectType::Schedule),
+        "averaging" => Some(ObjectType::Averaging),
+        "trendlog" | "tl" => Some(ObjectType::TrendLog),
+        "lifesafetypoint" | "lsp" => Some(ObjectType::LifeSafetyPoint),
+        "lifesafetyzone" | "lsz" => Some(ObjectType::LifeSafetyZone),
+        "accumulator" => Some(ObjectType::Accumulator),
+        "pulseconverter" | "pc" => Some(ObjectType::PulseConverter),
+        "eventlog" | "el" => Some(ObjectType::EventLog),
         "trendlogmultiple" | "tlm" => Some(ObjectType::TrendLogMultiple),
-        "loadcontrol"      | "lc"  => Some(ObjectType::LoadControl),
-        "structuredview"   | "sv"  => Some(ObjectType::StructuredView),
-        "accessdoor"       | "ad"  => Some(ObjectType::AccessDoor),
-        "accesszone"       | "az"  => Some(ObjectType::AccessZone),
-        "accessuser"       | "au"  => Some(ObjectType::AccessUser),
-        "accessrights"     | "ar"  => Some(ObjectType::AccessRights),
-        "accesscredential" | "ac"  => Some(ObjectType::AccessCredential),
-        "accesspoint"      | "ap"  => Some(ObjectType::AccessPoint),
-        "networkport"      | "np"  => Some(ObjectType::NetworkPort),
+        "loadcontrol" | "lc" => Some(ObjectType::LoadControl),
+        "structuredview" | "sv" => Some(ObjectType::StructuredView),
+        "accessdoor" | "ad" => Some(ObjectType::AccessDoor),
+        "accesszone" | "az" => Some(ObjectType::AccessZone),
+        "accessuser" | "au" => Some(ObjectType::AccessUser),
+        "accessrights" | "ar" => Some(ObjectType::AccessRights),
+        "accesscredential" | "ac" => Some(ObjectType::AccessCredential),
+        "accesspoint" | "ap" => Some(ObjectType::AccessPoint),
+        "networkport" | "np" => Some(ObjectType::NetworkPort),
         _ => None,
     }
 }
@@ -167,12 +169,8 @@ pub(crate) fn format_value(values: Vec<PropertyValue>) -> Option<String> {
         PropertyValue::ObjectIdentifier(oid) => {
             Some(format!("{:?}:{}", oid.object_type, oid.instance))
         }
-        PropertyValue::Date(year, month, day, _) => {
-            Some(format!("{year}-{month:02}-{day:02}"))
-        }
-        PropertyValue::Time(h, m, s, cs) => {
-            Some(format!("{h:02}:{m:02}:{s:02}.{cs:02}"))
-        }
+        PropertyValue::Date(year, month, day, _) => Some(format!("{year}-{month:02}-{day:02}")),
+        PropertyValue::Time(h, m, s, cs) => Some(format!("{h:02}:{m:02}:{s:02}.{cs:02}")),
         _ => None,
     }
 }

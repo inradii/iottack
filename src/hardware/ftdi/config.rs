@@ -1,6 +1,6 @@
 use crate::core::PluginConfig;
-use anyhow::{anyhow, Result};
-use ftdi_nusb::{types::Interface, FtdiDevice};
+use anyhow::{Result, anyhow};
+use ftdi_nusb::{FtdiDevice, types::Interface};
 
 /// PIDs to probe when no `--pid` is given, in preference order.
 const AUTO_PIDS: &[u16] = &[
@@ -35,7 +35,12 @@ impl std::fmt::Display for MpsseMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             MpsseMode::I2c => write!(f, "I2C"),
-            MpsseMode::Spi(c) => write!(f, "SPI mode {} ({})", c.mode, if c.lsb_first { "LSB" } else { "MSB" }),
+            MpsseMode::Spi(c) => write!(
+                f,
+                "SPI mode {} ({})",
+                c.mode,
+                if c.lsb_first { "LSB" } else { "MSB" }
+            ),
             MpsseMode::Jtag => write!(f, "JTAG"),
             MpsseMode::Swd => write!(f, "SWD"),
         }
@@ -104,7 +109,13 @@ impl FtdiConfig {
 
         let clock_hz = config.parse_or("clock_hz", 100_000u32);
 
-        Ok(Self { vid, pid, interface, clock_hz, mpsse_mode: mode })
+        Ok(Self {
+            vid,
+            pid,
+            interface,
+            clock_hz,
+            mpsse_mode: mode,
+        })
     }
 
     /// Open an FTDI device on `self.interface`.

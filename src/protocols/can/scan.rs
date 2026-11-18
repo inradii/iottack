@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::io;
 use std::time::{Duration, Instant};
 
-use super::common::{format_id, frame_id, hex_bytes, id_severity_high, known_id_hint, IFACE_HELP};
+use super::common::{IFACE_HELP, format_id, frame_id, hex_bytes, id_severity_high, known_id_hint};
 
 /// CAN bus ID scanning plugin.
 pub struct CanScan {
@@ -181,9 +181,7 @@ impl Plugin for CanScan {
                 (Severity::Info, " [EFF/extended 29-bit]".into())
             } else {
                 match known_id_hint(id) {
-                    Some(hint) if id_severity_high(id) => {
-                        (Severity::High, format!(" [{hint}]"))
-                    }
+                    Some(hint) if id_severity_high(id) => (Severity::High, format!(" [{hint}]")),
                     Some(hint) => (Severity::Medium, format!(" [{hint}]")),
                     None => (Severity::Info, String::new()),
                 }

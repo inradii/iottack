@@ -7,7 +7,7 @@ use socketcan::{CanDataFrame, CanFrame, CanSocket, EmbeddedFrame, ExtendedId, So
 use std::thread;
 use std::time::Duration;
 
-use super::common::{format_id, hex_bytes, IFACE_HELP};
+use super::common::{IFACE_HELP, format_id, hex_bytes};
 
 /// CAN bus frame sending plugin implementation.
 pub struct CanSend {
@@ -121,8 +121,8 @@ impl Plugin for CanSend {
         self.extended = config.get("extended") == Some("true") || self.id > 0x7FF;
 
         let data_str = config.get_or("data", "");
-        self.data = parse_hex_bytes(&data_str)
-            .map_err(|e| anyhow::anyhow!("invalid --data: {e}"))?;
+        self.data =
+            parse_hex_bytes(&data_str).map_err(|e| anyhow::anyhow!("invalid --data: {e}"))?;
 
         if self.data.len() > 8 {
             return Err(anyhow::anyhow!(
@@ -157,7 +157,11 @@ impl Plugin for CanSend {
         let frame = match build_frame(self.id, self.extended, &self.data) {
             Ok(f) => f,
             Err(e) => {
-                result.add(PluginFinding::new(Severity::Info, "Invalid frame parameters", format!("{e}")));
+                result.add(PluginFinding::new(
+                    Severity::Info,
+                    "Invalid frame parameters",
+                    format!("{e}"),
+                ));
                 result.finish(PluginStatus::Fail);
                 return Ok(result);
             }
@@ -165,7 +169,11 @@ impl Plugin for CanSend {
 
         let id_str = format_id(self.id, self.extended);
         let data_hex = hex_bytes(&self.data);
-        let fmt = if self.extended { "EFF/29-bit" } else { "SFF/11-bit" };
+        let fmt = if self.extended {
+            "EFF/29-bit"
+        } else {
+            "SFF/11-bit"
+        };
 
         let mut sent = 0u32;
         let mut errors = 0u32;
@@ -223,18 +231,14 @@ impl Plugin for CanSend {
 fn build_frame(id: u32, extended: bool, data: &[u8]) -> Result<CanFrame> {
     if extended {
         let eid = ExtendedId::new(id).ok_or_else(|| {
-            anyhow::anyhow!(
-                "ID 0x{id:08X} out of range for 29-bit EFF (max 0x1FFFFFFF)"
-            )
+            anyhow::anyhow!("ID 0x{id:08X} out of range for 29-bit EFF (max 0x1FFFFFFF)")
         })?;
         CanDataFrame::new(eid, data)
             .map(CanFrame::Data)
             .ok_or_else(|| anyhow::anyhow!("failed to build EFF frame (data too long?)"))
     } else {
         let sid = StandardId::new(id as u16).ok_or_else(|| {
-            anyhow::anyhow!(
-                "ID 0x{id:03X} out of range for 11-bit SFF (max 0x7FF)"
-            )
+            anyhow::anyhow!("ID 0x{id:03X} out of range for 11-bit SFF (max 0x7FF)")
         })?;
         CanDataFrame::new(sid, data)
             .map(CanFrame::Data)
@@ -248,15 +252,14 @@ fn parse_hex_bytes(s: &str) -> std::result::Result<Vec<u8>, String> {
         return Ok(Vec::new());
     }
     let digits: String = s.chars().filter(|c| c.is_ascii_hexdigit()).collect();
-    if digits.len() % 2 != 0 {
+    if !digits.len().is_multiple_of(2) {
         return Err(format!("odd number of HEX digits in '{s}'"));
     }
     digits
         .as_bytes()
         .chunks(2)
         .map(|chunk| {
-            u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16)
-                .map_err(|e| e.to_string())
+            u8::from_str_radix(std::str::from_utf8(chunk).unwrap(), 16).map_err(|e| e.to_string())
         })
         .collect()
 }

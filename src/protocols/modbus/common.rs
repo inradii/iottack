@@ -143,7 +143,7 @@ impl RtuClient {
     pub fn read_bits(&mut self, func: u8, addr: u16, count: u16) -> Result<Vec<bool>> {
         let req = self.build_frame(func, &addr_count_payload(addr, count));
         self.port.write_all(&req)?;
-        let byte_count = ((count + 7) / 8) as usize;
+        let byte_count = count.div_ceil(8) as usize;
         let resp = self.recv(5 + byte_count)?;
         parse_bit_response(&resp, count)
     }

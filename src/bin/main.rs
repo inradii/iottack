@@ -94,7 +94,7 @@ fn build_cli(registry: &PluginRegistry) -> Command {
         for plugin_name in plugin_names {
             let plugin = registry.get(plugin_name).unwrap();
             let meta = plugin.meta();
-            let subname = plugin_name.splitn(2, '/').nth(1).unwrap();
+            let subname = plugin_name.split_once('/').unwrap().1;
             if subname == group.as_str() {
                 // Plugin name matches group. Expose args directly on the group command
                 // so the user types `iottack <group>` instead of `iottack <group> <group>`.

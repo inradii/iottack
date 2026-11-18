@@ -67,7 +67,6 @@ impl Plugin for BaudRateScanner {
         Ok(())
     }
 
-    ///
     fn execute(&mut self) -> Result<PluginResult> {
         let mut result = PluginResult::new(self.meta().name);
         let mut hits: Vec<u32> = Vec::new();

@@ -70,7 +70,9 @@ impl EventInfoPlugin {
 
 /// Implement the Default trait for the EventInfoPlugin, allowing it to be instantiated with default settings.
 impl Default for EventInfoPlugin {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Implement the Plugin trait for the EventInfoPlugin, enabling it to be used as a plugin within the framework.
@@ -180,11 +182,9 @@ impl Plugin for EventInfoPlugin {
         let mut readable_count = 0usize;
 
         for obj_id in &objects {
-            let Ok(values) = client.read_property(
-                target.clone(),
-                *obj_id,
-                PropertyIdentifier::EventState,
-            ) else {
+            let Ok(values) =
+                client.read_property(target.clone(), *obj_id, PropertyIdentifier::EventState)
+            else {
                 continue; // object doesn't support event-state
             };
 
@@ -252,10 +252,16 @@ impl Plugin for EventInfoPlugin {
             ));
         } else {
             // Check for fault-severity conditions
-            let has_faults = active.iter().any(|l| l.contains("Fault") || l.contains("Life-Safety"));
+            let has_faults = active
+                .iter()
+                .any(|l| l.contains("Fault") || l.contains("Life-Safety"));
             result.add(
                 PluginFinding::new(
-                    if has_faults { Severity::Critical } else { Severity::High },
+                    if has_faults {
+                        Severity::Critical
+                    } else {
+                        Severity::High
+                    },
                     format!(
                         "{} active event{} on {addr}",
                         active.len(),

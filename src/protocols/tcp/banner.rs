@@ -392,10 +392,10 @@ impl Plugin for TcpBannerGrabber {
         self.timeout_ms = config.parse_or("timeout_ms", DEFAULT_TIMEOUT_MS);
         self.probe = config.get("probe").unwrap_or_default().to_string();
 
-        if let Some(spec) = config.get("ports") {
-            if !spec.is_empty() {
-                self.ports = parse_ports(spec)?;
-            }
+        if let Some(spec) = config.get("ports")
+            && !spec.is_empty()
+        {
+            self.ports = parse_ports(spec)?;
         }
 
         Ok(())

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::io;
 use std::time::{Duration, Instant};
 
-use super::common::{format_id, frame_id, hex_bytes, id_severity_high, known_id_hint, IFACE_HELP};
+use super::common::{IFACE_HELP, format_id, frame_id, hex_bytes, id_severity_high, known_id_hint};
 
 /// CAN bus traffic capture and analysis plugin.
 pub struct CanDump {
@@ -17,7 +17,6 @@ pub struct CanDump {
     max_frames: usize,
 }
 
-/// 
 impl CanDump {
     pub fn new() -> Self {
         Self {
@@ -119,9 +118,7 @@ impl Plugin for CanDump {
                 Ok(CanFrame::Data(f)) => {
                     total += 1;
                     let (num_id, ext) = frame_id(&f);
-                    let entry = id_stats
-                        .entry(num_id)
-                        .or_insert((0, Vec::new(), 0, ext));
+                    let entry = id_stats.entry(num_id).or_insert((0, Vec::new(), 0, ext));
                     entry.0 += 1;
                     entry.1 = f.data().to_vec();
                     entry.2 = f.dlc();
@@ -156,7 +153,10 @@ impl Plugin for CanDump {
         if total == 0 && error_count == 0 {
             result.add(PluginFinding::new(
                 Severity::Info,
-                format!("No CAN frames received on {} in {:.1}s", self.iface, elapsed),
+                format!(
+                    "No CAN frames received on {} in {:.1}s",
+                    self.iface, elapsed
+                ),
                 "The bus may be idle, disconnected or at a different bit rate. \
                  Verify wiring and that the interface bit rate matches the bus.",
             ));

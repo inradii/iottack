@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use nusb::{
-    transfer::{Buffer, In, Interrupt, Out},
     Endpoint, Interface, MaybeFuture,
+    transfer::{Buffer, In, Interrupt, Out},
 };
 use std::time::Duration;
 
@@ -22,11 +22,11 @@ const SET_BUS_SPEED: u8 = 0x20;
 // WRITE NACK (0x25) persists until cancelled — unlike READ NACK which
 // auto-transitions before the first poll arrives.  0x44 (WRITEDATA_TOUT) is
 // the uninitialized engine state before the first I2C_speed call.
-const I2C_ST_IDLE: u8 = 0x00;             // idle / transfer complete (ACK)
-const I2C_ST_NACK_STOP: u8 = 0x25;        // address not acknowledged
-const I2C_ST_WRADDRL_TOUT: u8 = 0x23;     // timeout sending address
-const I2C_ST_WRITEDATA_TOUT: u8 = 0x44;   // data-phase timeout / uninitialized engine
-const I2C_ST_STOP_TOUT: u8 = 0x62;        // bus stuck (SCL/SDA held low)
+const I2C_ST_IDLE: u8 = 0x00; // idle / transfer complete (ACK)
+const I2C_ST_NACK_STOP: u8 = 0x25; // address not acknowledged
+const I2C_ST_WRADDRL_TOUT: u8 = 0x23; // timeout sending address
+const I2C_ST_WRITEDATA_TOUT: u8 = 0x44; // data-phase timeout / uninitialized engine
+const I2C_ST_STOP_TOUT: u8 = 0x62; // bus stuck (SCL/SDA held low)
 
 /// MCP2221A HID I2C session.
 ///
@@ -76,7 +76,11 @@ impl Mcp2221I2c {
             .endpoint::<Interrupt, In>(EP_IN)
             .map_err(|e| anyhow!("cannot open interrupt IN endpoint 0x{EP_IN:02x}: {e}"))?;
 
-        let mut inst = Self { _iface: iface, ep_out, ep_in };
+        let mut inst = Self {
+            _iface: iface,
+            ep_out,
+            ep_in,
+        };
         inst.init_i2c(100_000)?;
         Ok(inst)
     }
@@ -93,10 +97,10 @@ impl Mcp2221I2c {
     pub fn probe(&mut self, addr: u8) -> Result<bool> {
         let mut cmd = [0u8; REPORT_SIZE];
         cmd[0] = CMD_I2C_WRITE;
-        cmd[1] = 1;         // length LSB: 1 data byte
-        cmd[2] = 0;         // length MSB
+        cmd[1] = 1; // length LSB: 1 data byte
+        cmd[2] = 0; // length MSB
         cmd[3] = addr << 1; // 7-bit address with write bit (bit 0 = 0)
-        cmd[4] = 0x00;      // dummy data byte
+        cmd[4] = 0x00; // dummy data byte
 
         self.send(&cmd)?;
         let init = self.recv()?;
@@ -135,7 +139,9 @@ impl Mcp2221I2c {
                     acked = true;
                     break;
                 }
-                I2C_ST_NACK_STOP | I2C_ST_WRADDRL_TOUT | I2C_ST_WRITEDATA_TOUT
+                I2C_ST_NACK_STOP
+                | I2C_ST_WRADDRL_TOUT
+                | I2C_ST_WRITEDATA_TOUT
                 | I2C_ST_STOP_TOUT => break,
                 _ => {}
             }

@@ -1,5 +1,5 @@
 use crate::core::{
-    Plugin, PluginConfig, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
+    Plugin, PluginFinding, PluginMeta, PluginResult, PluginStatus, Severity,
 };
 use crate::plugin_meta;
 use anyhow::Result;
@@ -102,8 +102,7 @@ impl Plugin for DevicePlugin {
             let title = format!("{product} — {serial}");
 
             result.add(
-                PluginFinding::new(Severity::Info, title, description)
-                    .with_evidence(evidence),
+                PluginFinding::new(Severity::Info, title, description).with_evidence(evidence),
             );
         }
 

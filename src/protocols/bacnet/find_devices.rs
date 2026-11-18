@@ -21,13 +21,21 @@ pub struct FindDevicesPlugin {
 /// Implementation of the FindDevicesPlugin.
 impl FindDevicesPlugin {
     pub fn new() -> Self {
-        Self { host: None, port: BACNET_DEFAULT_PORT, timeout_ms: 3_000, network: None, device_id: None }
+        Self {
+            host: None,
+            port: BACNET_DEFAULT_PORT,
+            timeout_ms: 3_000,
+            network: None,
+            device_id: None,
+        }
     }
 }
 
 /// Constructor for the FindDevicesPlugin.
 impl Default for FindDevicesPlugin {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Implementation of the Plugin trait for the FindDevicesPlugin.
@@ -98,7 +106,11 @@ impl Plugin for FindDevicesPlugin {
         self.network = if net_str.is_empty() {
             None
         } else {
-            Some(net_str.parse::<u16>().map_err(|e| anyhow::anyhow!("invalid network number: {e}"))?)
+            Some(
+                net_str
+                    .parse::<u16>()
+                    .map_err(|e| anyhow::anyhow!("invalid network number: {e}"))?,
+            )
         };
         self.device_id = config.get("device_id").and_then(|s| s.parse().ok());
         Ok(())
@@ -115,7 +127,9 @@ impl Plugin for FindDevicesPlugin {
 
         // Device discovery
         let devices: Vec<DeviceInfo> = if let Some(id) = self.device_id {
-            let host = self.host.as_deref()
+            let host = self
+                .host
+                .as_deref()
                 .ok_or_else(|| anyhow::anyhow!("--host is required when --device-id is set"))?;
             let addr: SocketAddr = format!("{}:{}", host, self.port)
                 .parse()
@@ -127,32 +141,44 @@ impl Plugin for FindDevicesPlugin {
                 .map_err(|e| anyhow::anyhow!("invalid host/port: {e}"))?;
 
             if let Some(net) = self.network {
-                client.who_is_network(addr, net, None, None)
+                client
+                    .who_is_network(addr, net, None, None)
                     .map_err(|e| anyhow::anyhow!("who-is-network failed: {e}"))?
             } else {
-                client.who_is_to(addr, None, None)
+                client
+                    .who_is_to(addr, None, None)
                     .map_err(|e| anyhow::anyhow!("who-is failed: {e}"))?
             }
         } else {
-            client.who_is(None, None)
+            client
+                .who_is(None, None)
                 .map_err(|e| anyhow::anyhow!("who-is broadcast failed: {e}"))?
         };
 
         if !devices.is_empty() {
-            let lines: Vec<String> = devices.iter().map(|d| {
-                let route = d.route.as_ref()
-                    .map(|r| format!("  (routed via {:?})", r))
-                    .unwrap_or_default();
-                format!(
-                    "{}  ID={}  vendor={} ({})  max-apdu={}{}",
-                    d.address, d.device_id, d.vendor_name, d.vendor_id, d.max_apdu, route
-                )
-            }).collect();
+            let lines: Vec<String> = devices
+                .iter()
+                .map(|d| {
+                    let route = d
+                        .route
+                        .as_ref()
+                        .map(|r| format!("  (routed via {:?})", r))
+                        .unwrap_or_default();
+                    format!(
+                        "{}  ID={}  vendor={} ({})  max-apdu={}{}",
+                        d.address, d.device_id, d.vendor_name, d.vendor_id, d.max_apdu, route
+                    )
+                })
+                .collect();
 
             result.add(
                 PluginFinding::new(
                     Severity::High,
-                    format!("{} BACnet device{} found", devices.len(), if devices.len() == 1 { "" } else { "s" }),
+                    format!(
+                        "{} BACnet device{} found",
+                        devices.len(),
+                        if devices.len() == 1 { "" } else { "s" }
+                    ),
                     format!(
                         "{} BACnet device{} responded to unauthenticated Who-Is. \
                          Use bacnet/scan for property enumeration or bacnet/object-list \
@@ -170,18 +196,21 @@ impl Plugin for FindDevicesPlugin {
             let addr: SocketAddr = format!("{}:{}", host, self.port)
                 .parse()
                 .map_err(|e| anyhow::anyhow!("invalid host/port: {e}"))?;
-            client.who_is_router_to(addr, self.network)
+            client
+                .who_is_router_to(addr, self.network)
                 .unwrap_or_default()
         } else {
-            client.who_is_router(self.network)
-                .unwrap_or_default()
+            client.who_is_router(self.network).unwrap_or_default()
         };
 
         if !routers.is_empty() {
-            let lines: Vec<String> = routers.iter().map(|r| {
-                let nets: Vec<String> = r.networks.iter().map(|n| n.to_string()).collect();
-                format!("{}  networks=[{}]", r.address, nets.join(", "))
-            }).collect();
+            let lines: Vec<String> = routers
+                .iter()
+                .map(|r| {
+                    let nets: Vec<String> = r.networks.iter().map(|n| n.to_string()).collect();
+                    format!("{}  networks=[{}]", r.address, nets.join(", "))
+                })
+                .collect();
 
             result.add(
                 PluginFinding::new(

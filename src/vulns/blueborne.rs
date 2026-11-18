@@ -357,8 +357,8 @@ impl BlueBornePlugin {
                                     severity = ?assessment.severity,
                                     "BlueBorne exposure"
                                 );
-                                let cve_list = assessment.cves.join(", ");
-                                let reason_list = assessment.reasons.join("\n  - ");
+                                let _cve_list = assessment.cves.join(", ");
+                                let _reason_list = assessment.reasons.join("\n  - ");
                                 let mut desc = format!(
                                     "Address:   {addr}\n  \
                                      Name:      {}\n  \
