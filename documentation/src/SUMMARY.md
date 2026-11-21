@@ -9,6 +9,8 @@
   - [HTTP](./plugins/http.md)
     - [http banner](./plugins/http/http-banner.md)
     - [http sse](./plugins/http/http-sse.md)
+  - [Noise](./plugins/noise.md)
+    - [noise handshake](./plugins/noise/handshake.md)
   - [Network](./plugins/network.md)
     - [network mdns-scan](./plugins/network/mdns-scan.md)
     - [network telnet](./plugins/network/telnet.md)
