@@ -20,7 +20,7 @@ nix run . -- platform
 
 ## Usage
 
-### PLatform details
+### Platform details
 
 Collect platform environment details about the host which acts as the test platform:
 
