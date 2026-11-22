@@ -114,3 +114,31 @@ Result:
   ]
 }
 ```
+
+## Capabilities
+
+Use a tool to get the capabilities, like `mcp-discovery`.
+
+```bash
+$ mcp-discovery print -- iottack mcp server
+Launching: iottack mcp server ...
+with protocol version: 2025-11-25
+┌──────────────────────────────────────────────────┐
+│                                                  │
+│                  iottack 0.3.0                   │
+│                                                  │
+└──────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│                   Capabilities                   │
+└──────────────────────────────────────────────────┘
+✔ Tools  ✘ Resources  ✘ Prompts  ✘ Logging  ✘ Completions
+✘ Tasks
+┌──────────────────────────────────────────────────┐
+│                    Tools(54)                     │
+└──────────────────────────────────────────────────┘
+1. amqp-scan: Detect an AMQP broker and test for default credentials
+
+Connects to the target AMQP port. Confirms whether an AMQP 0-9-1 broker is reachable and optionally probes a list of common default credentials using PLAIN authentication. Flags cleartext AMQP and accepted credentials as findings.
+2. bacnet-device-properties: Enumerate all properties on the target BACnet Device object
+[...]
+```
