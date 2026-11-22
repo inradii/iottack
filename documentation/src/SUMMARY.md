@@ -53,6 +53,8 @@
     - [can scan](./plugins/can/scan.md)
     - [can send](./plugins/can/send.md)
     - [can enumerate](./plugins/can/enumerate.md)
+  - [MCP](./plugins/mcp.md)
+    - [mcp server](./plugins/mcp/server.md)
   - [Modbus](./plugins/modbus/intro.md)
     - [modbus device-info](./plugins/modbus/device-info.md)
     - [modbus enumerate](./plugins/modbus/enumerate.md)
