@@ -8,7 +8,7 @@ Check the [Plugin overview](https://affolter-engineering.github.io/iottack/plugi
 ## Build
 
 ```sh
-cargo build --release
+nix develop --command cargo build --release
 ```
 
 With Nix:

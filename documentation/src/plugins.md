@@ -36,6 +36,7 @@ a severity level and optional evidence string.
 | [modbus read-registers](./plugins/modbus/read-registers.md) | `iottack modbus read-registers` | Read Modbus holding or input registers |
 | [modbus write-coil](./plugins/modbus/write-coil.md) | `iottack modbus write-coil` | Write a single Modbus coil (FC05) |
 | [modbus write-register](./plugins/modbus/write-register.md) | `iottack modbus write-register` | Write a value to one or more Modbus holding registers |
+| [mcp server](./plugins/mcp/server.md) | `iottack mcp server` | Start an MCP stdio server that exposes all iottack plugins as AI tools |
 | [mqtt](./plugins/mqtt.md) | `iottack mqtt` | Work with MQTT |
 | [network mdns-scan](./plugins/network/mdns-scan.md) | `iottack network mdns-scan` | Discover mDNS/DNS-SD services on the local network |
 | [network telnet](./plugins/network/telnet.md) | `iottack network telnet` | Connect to a Telnet service and detect banners, login prompts and default credentials |

@@ -5,6 +5,7 @@ pub mod can;
 pub mod example;
 pub mod http;
 pub mod i2c;
+pub mod mcp;
 pub mod modbus;
 pub mod network;
 pub mod noise;
